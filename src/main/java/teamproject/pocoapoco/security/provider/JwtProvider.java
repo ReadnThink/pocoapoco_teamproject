@@ -28,7 +28,7 @@ public class JwtProvider {
     public String generateToken(User user) {
         Claims claims = Jwts.claims();
         claims.put(ID_KEY, user.getId());
-        claims.put(USERNAME_KEY, user.getUsername());
+        claims.put(USERNAME_KEY, user.getUserName());
         claims.put(ROLE_KEY, user.getRole().name());
 
         return Jwts.builder()

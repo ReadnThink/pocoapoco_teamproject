@@ -1,6 +1,9 @@
 package teamproject.pocoapoco.domain.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import teamproject.pocoapoco.enums.InterestSport;
 import teamproject.pocoapoco.enums.UserRole;
 
@@ -10,6 +13,9 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "Users")
 public class User {
     @Id
