@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.ObjectUtils;
@@ -38,13 +39,24 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = null;
 
-        Cookie[] cookies = request.getCookies();
+        if(request.getHeader(HttpHeaders.AUTHORIZATION)== null){
+            Cookie[] cookies = request.getCookies();
 
-        for (Cookie cookie: cookies){
-            if(cookie.getName().equals("jwt")){
-                token = cookie.getValue();
+
+            if(cookies != null){
+                for (Cookie cookie: cookies){
+                    if(cookie.getName().equals("jwt")){
+                        token = cookie.getValue();
+                        log.info("쿠키 가져옴");
+                    }
+                }
             }
+        } else{
+            token = request.getHeader(HttpHeaders.AUTHORIZATION);
         }
+
+
+
 
         request.setAttribute("existsToken", true); // 토큰 존재 여부 초기화
         if (isEmptyToken(token)) request.setAttribute("existsToken", false); // 토큰이 없는 경우 false로 변경
@@ -74,7 +86,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             if (ObjectUtils.isEmpty(isLogout)) {
                 // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext 에 저장
                 Authentication authentication = jwtProvider.getAuthentication(token);
-                log.info(String.valueOf(authentication.isAuthenticated()));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } else if(isLogout.equals("logout")) {
@@ -83,6 +94,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 return;
             }
         }
+        Authentication authentication = jwtProvider.getAuthentication(token);
+        log.info(String.valueOf(SecurityContextHolder.getContext().getAuthentication().isAuthenticated()));
+        log.info(String.valueOf(authentication.isAuthenticated()));
 
 
 
