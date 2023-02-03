@@ -8,16 +8,29 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import teamproject.pocoapoco.domain.dto.crew.CrewDetailResponse;
 import teamproject.pocoapoco.domain.dto.crew.CrewRequest;
+import teamproject.pocoapoco.domain.dto.crew.CrewResponse;
 import teamproject.pocoapoco.domain.dto.crew.CrewStrictRequest;
+import teamproject.pocoapoco.domain.dto.like.LikeNewResponse;
 import teamproject.pocoapoco.domain.dto.response.Response;
+import teamproject.pocoapoco.domain.entity.Crew;
 import teamproject.pocoapoco.domain.entity.Sport;
+import teamproject.pocoapoco.domain.entity.User;
+import teamproject.pocoapoco.repository.CrewRepository;
+import teamproject.pocoapoco.repository.UserRepository;
 import teamproject.pocoapoco.service.CrewService;
+import teamproject.pocoapoco.service.ui.LikeViewService;
+
+import javax.persistence.EntityNotFoundException;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,35 +40,85 @@ import teamproject.pocoapoco.service.CrewService;
 public class CrewViewController {
 
     private final CrewService crewService;
+    private final CrewRepository crewRepository;
+    private final UserRepository userRepository;
+    private final LikeViewService likeViewService;
 
 
-//    // 크루 게시글 등록
-//    @PostMapping()
-//    @ApiOperation(value = "크루 게시글 등록", notes = "")
-//    public Response addCrew(@RequestBody CrewRequest crewRequest, Authentication authentication) {
-//        return Response.success(crewService.addCrew(crewRequest, authentication.getName()));
-//    }
-//
-//    // 크루 게시글 수정
-//    @PostMapping("/{crewId}")
-//    @ApiOperation(value = "크루 게시글 수정", notes = "")
-//    public Response modifyCrew(@PathVariable Long crewId, @RequestBody CrewRequest crewRequest, Authentication authentication) {
-//        return Response.success(crewService.modifyCrew(crewId, crewRequest, authentication.getName()));
-//    }
-//
-//    // 크루 게시글 삭제
-//    @DeleteMapping("/{crewId}")
-//    @ApiOperation(value = "크루 게시글 삭제", notes = "")
-//    public Response deleteCrew(@PathVariable Long crewId, Authentication authentication) {
-//        return Response.success(crewService.deleteCrew(crewId, authentication.getName()));
-//    }
-//
-//    // 크루 게시물 상세 조회
-//    @GetMapping("/{crewId}")
-//    @ApiOperation(value = "크루 게시글 상세조회", notes = "")
-//    public Response detailCrew(@PathVariable Long crewId, Authentication authentication) {
-//        return Response.success(crewService.detailCrew(crewId, authentication.getName()));
-//    }
+    // 크루 게시글 작성
+    @PostMapping("/view/v1/crews/")
+    @ApiOperation(value = "크루 게시글 등록", notes = "")
+    public String addCrew(@RequestBody CrewRequest crewRequest, Authentication authentication) {
+        crewService.addCrew(crewRequest, authentication.getName());
+        return "crew/write";
+    }
+    // 크루 게시물 상세 페이지
+    @GetMapping("/view/v1/crews/{crewId}")
+    public String detailCrew(@PathVariable Long crewId, Model model, Authentication authentication) {
+        try {
+            CrewDetailResponse details = crewService.detailCrew(crewId);
+            int count = likeViewService.getLikeCrew(crewId);
+
+            model.addAttribute("details", details);
+            // 좋아요 개수 출력
+            model.addAttribute("likeCnt",count);
+        } catch (EntityNotFoundException e) {
+            return "redirect:/index";
+        }
+        return "crew/read-crew";
+    }
+
+    // 크루 게시글 수정
+    @PutMapping("/view/v1/crews/{crewId}")
+    public String modifyCrew(@PathVariable Long crewId, @ModelAttribute CrewRequest crewRequest, Authentication authentication, Errors errors, RedirectAttributes attributes) {
+        if (errors.hasErrors()) {
+            return "crew/update-crew";
+        }
+        CrewResponse crewResponse = crewService.modifyCrew(crewId, crewRequest, authentication.getName());
+        attributes.addFlashAttribute("message", "게시글을 수정했습니다.");
+
+        return "redirect:" + "/view/v1/crews/update/" + crewResponse.getCrewId();
+    }
+    // 크루 게시글 수정화면
+    @GetMapping("/view/v1/crews/update/{crewId}")
+    public String updateCrew (@PathVariable Long crewId, Model model, Authentication authentication) {
+        Crew crew  = crewRepository.findById(crewId).orElse(null);
+        if(crew == null || !crew.getUser().getUsername().equals(authentication.getName())) {
+            return "error/404";
+        }
+        CrewRequest crewRequest = new CrewRequest();
+        crewRequest.setTitle(crew.getTitle());
+        crewRequest.setContent(crew.getContent());
+
+        model.addAttribute(crewRequest);
+        model.addAttribute("crewId", crew.getId());
+
+        return "crew/update-crew";
+    }
+
+    // 크루 게시글 삭제
+    @DeleteMapping("/view/v1/crews/{crewId}")
+    public String deleteCrew(@PathVariable Long crewId,Model model ,Authentication authentication) {
+        Crew crew = crewRepository.findById(crewId).orElse(null);
+        User user = userRepository.findById(crew.getUser().getId()).orElse(null);
+        log.info("삭제 조회 중");
+
+        if(crew == null || user == null) {
+            return "error/404";
+        }
+        CrewResponse crewResponse = crewService.deleteCrew(crewId, authentication.getName());
+        model.addAttribute("response",crewResponse);
+        return "redirect:/";
+    }
+
+    // 좋아요 누르기
+    @PostMapping("/view/v1/crews/{crewId}/like")
+    public ResponseEntity likeCrew(@PathVariable Long crewId, Authentication authentication){
+        LikeNewResponse likeNewResponse =  likeViewService.pressLike(crewId,authentication.getName());
+        return new ResponseEntity<>(likeNewResponse, HttpStatus.OK);
+    }
+
+
 
     // 크루 게시물 전체 조회
     @GetMapping()
