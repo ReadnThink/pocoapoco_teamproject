@@ -20,10 +20,8 @@ import teamproject.pocoapoco.domain.dto.crew.CrewDetailResponse;
 import teamproject.pocoapoco.domain.dto.crew.CrewRequest;
 import teamproject.pocoapoco.domain.dto.crew.CrewResponse;
 import teamproject.pocoapoco.domain.dto.crew.CrewStrictRequest;
-import teamproject.pocoapoco.domain.dto.like.LikeNewResponse;
-import teamproject.pocoapoco.domain.dto.response.Response;
+import teamproject.pocoapoco.domain.dto.like.LikeViewResponse;
 import teamproject.pocoapoco.domain.entity.Crew;
-import teamproject.pocoapoco.domain.entity.Sport;
 import teamproject.pocoapoco.domain.entity.User;
 import teamproject.pocoapoco.repository.CrewRepository;
 import teamproject.pocoapoco.repository.UserRepository;
@@ -114,8 +112,8 @@ public class CrewViewController {
     // 좋아요 누르기
     @PostMapping("/view/v1/crews/{crewId}/like")
     public ResponseEntity likeCrew(@PathVariable Long crewId, Authentication authentication){
-        LikeNewResponse likeNewResponse =  likeViewService.pressLike(crewId,authentication.getName());
-        return new ResponseEntity<>(likeNewResponse, HttpStatus.OK);
+        LikeViewResponse likeViewResponse =  likeViewService.pressLike(crewId,authentication.getName());
+        return new ResponseEntity<>(likeViewResponse, HttpStatus.OK);
     }
 
 
