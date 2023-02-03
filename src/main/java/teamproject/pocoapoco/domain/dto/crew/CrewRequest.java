@@ -8,6 +8,7 @@ import teamproject.pocoapoco.domain.entity.chat.ChatRoom;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 @Builder
 public class CrewRequest {
 
