@@ -35,7 +35,7 @@ public class ProfileController {
     @PostMapping("/users/profile/edit")
     public String editUser(@ModelAttribute UserProfileRequest userProfileRequest, Model model, Authentication authentication){
 
-        UserProfileResponse userProfileResponse = userService.updateUserInfoByUserName(authentication.getName(), userProfileRequest);
+        UserProfileResponse userProfileResponse = userService.updateUserInfoByUserId(authentication.getName(), userProfileRequest);
 
         model.addAttribute("userProfileResponse", userProfileResponse);
 
@@ -48,7 +48,7 @@ public class ProfileController {
 
         String userName = authentication.getName();
 
-        UserProfileResponse userProfileResponse = userService.getUserInfoByUserName(userName);
+        UserProfileResponse userProfileResponse = userService.getUserInfoByUserId(userName);
 
         String userProfileImagePath = userService.getProfilePathByUserName(userName);
 
@@ -67,7 +67,7 @@ public class ProfileController {
 
         String userProfileImagePath = userService.getProfilePathByUserName(userName);
 
-        UserProfileResponse userProfileResponse = userService.getUserInfoByUserName(userName);
+        UserProfileResponse userProfileResponse = userService.getUserInfoByUserId(userName);
 
         model.addAttribute("userProfileResponse", userProfileResponse);
 
@@ -79,11 +79,11 @@ public class ProfileController {
 
 
 
-    @GetMapping("/users/profile/{userName}")
-    public String getUserProfile(@PathVariable String userName, Model model, HttpServletResponse response) throws IOException {
+    @GetMapping("/users/profile/{userId}")
+    public String getUserProfile(@PathVariable String userId, Model model, HttpServletResponse response) throws IOException {
 
         try{
-            UserProfileResponse userProfileResponse = userService.getUserInfoByUserName(userName);
+            UserProfileResponse userProfileResponse = userService.getUserInfoByUserId(userId);
             model.addAttribute("userProfileResponse", userProfileResponse);
             return "profile/get";
         } catch (AppException e){

@@ -3,6 +3,7 @@ package teamproject.pocoapoco.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import teamproject.pocoapoco.domain.dto.user.*;
@@ -65,10 +66,12 @@ public class UserService {
 
         } // 아이디 중복 확인 버튼 생성?
 
-        if (userRepository.findByUserName(userJoinRequest.getUserName()).isPresent()){
-            throw new AppException(ErrorCode.DUPLICATED_USERNAME, ErrorCode.DUPLICATED_USERNAME.getMessage());
 
-        }
+        // 닉네임 중복 가능
+//        if (userRepository.findByUserName(userJoinRequest.getUserName()).isPresent()){
+//            throw new AppException(ErrorCode.DUPLICATED_USERNAME, ErrorCode.DUPLICATED_USERNAME.getMessage());
+//
+//        }
 
 
         User user = User.toEntity(userJoinRequest.getUserId(), userJoinRequest.getUserName(), userJoinRequest.getAddress(),
@@ -95,7 +98,9 @@ public class UserService {
 
         // Access Token 에서 Username 출력
         Authentication authentication = jwtProvider.getAuthentication(currentAccessToken);
-        User user = userRepository.findByUserName(authentication.getName()).orElseThrow(() -> {
+
+
+        User user = userRepository.findByUserId(authentication.getName()).orElseThrow(() -> {
             throw new AppException(ErrorCode.USERID_NOT_FOUND, "아이디가 존재하지 않습니다.");
         });
 
@@ -155,10 +160,12 @@ public class UserService {
 
         } // 아이디 중복 확인 버튼 생성?
 
-        if (userRepository.findByUserName(userJoinRequest.getUserName()).isPresent()){
-            throw new AppException(ErrorCode.DUPLICATED_USERNAME, ErrorCode.DUPLICATED_USERNAME.getMessage());
+        // 닉네임 중복 가능
 
-        }
+//        if (userRepository.findByUserName(userJoinRequest.getUserName()).isPresent()){
+//            throw new AppException(ErrorCode.DUPLICATED_USERNAME, ErrorCode.DUPLICATED_USERNAME.getMessage());
+//
+//        }
 
         User user = User.toEntity(userJoinRequest.getUserId(), userJoinRequest.getUserName(), userJoinRequest.getAddress(),
                 encrypterConfig.encoder().encode(userJoinRequest.getPassword()), userJoinRequest.getLikeSoccer(),
@@ -172,7 +179,7 @@ public class UserService {
     }
 
     @Transactional(rollbackOn = AppException.class)
-    public UserProfileResponse updateUserInfoByUserName(String userName, UserProfileRequest userProfileRequest) {
+    public UserProfileResponse updateUserInfoByUserId(String userId, UserProfileRequest userProfileRequest) {
 
         // 비밀번호 확인 로직 따로 빼야할 필요 있음
         if (!userProfileRequest.getPassword().equals(userProfileRequest.getPasswordConfirm())){
@@ -180,7 +187,7 @@ public class UserService {
         }
 
         // user id 확인
-        Optional<User> myUserOptional = userRepository.findByUserName(userName);
+        Optional<User> myUserOptional = userRepository.findByUserId(userId);
 
         if(myUserOptional.isEmpty()){
             throw new AppException(ErrorCode.USERID_NOT_FOUND, ErrorCode.USERID_NOT_FOUND.getMessage());
@@ -189,7 +196,7 @@ public class UserService {
         User beforeMyUser = myUserOptional.get();
         // request에서 수정된 정보만 반영하기
 
-        String revisedUserName = (userProfileRequest.getUserName().equals(null))? beforeMyUser.getUsername(): userProfileRequest.getUserName();
+        String revisedUserName = (userProfileRequest.getUserName().equals(null))? beforeMyUser.getUserName(): userProfileRequest.getUserName();
         String revisedAddress = (userProfileRequest.getAddress().equals(null))? beforeMyUser.getAddress(): userProfileRequest.getAddress();
         String revisedPassword = (userProfileRequest.getPassword().equals(null))? beforeMyUser.getPassword(): userProfileRequest.getPassword();
         Boolean revisedLikeSoccer = (userProfileRequest.getLikeSoccer().equals(beforeMyUser.getSport().isSoccer()))? beforeMyUser.getSport().isSoccer(): userProfileRequest.getLikeSoccer();
@@ -206,9 +213,9 @@ public class UserService {
         return UserProfileResponse.fromEntity(revisedMyUser);
 
     }
-    public UserProfileResponse getUserInfoByUserName(String userName) {
+    public UserProfileResponse getUserInfoByUserId(String userId) {
 
-        Optional<User> selectedUserOptional = userRepository.findByUserName(userName);
+        Optional<User> selectedUserOptional = userRepository.findByUserId(userId);
 
         if(selectedUserOptional.isEmpty()){
             throw new AppException(ErrorCode.USERID_NOT_FOUND, ErrorCode.USERID_NOT_FOUND.getMessage());
@@ -220,9 +227,9 @@ public class UserService {
 
     }
 
-    public String getProfilePathByUserName(String userName) {
+    public String getProfilePathByUserName(String userId) {
 
-        Optional<User> selectedUserOptional = userRepository.findByUserName(userName);
+        Optional<User> selectedUserOptional = userRepository.findByUserId(userId);
 
         if(selectedUserOptional.isEmpty()){
             throw new AppException(ErrorCode.USERID_NOT_FOUND, ErrorCode.USERID_NOT_FOUND.getMessage());

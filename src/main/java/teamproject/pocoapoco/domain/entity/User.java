@@ -60,7 +60,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return userName;
+        return userId;
     }
 
     @Override
@@ -117,5 +117,10 @@ public class User implements UserDetails {
                 .sport(Sport.setSport(revisedLikeSoccer, revisedLikeJogging, revisedLikeTennis))
                 .password(encodedPassword)
                 .build();
+    }
+
+    public String getUserName() {
+        return userName;
+
     }
 }
