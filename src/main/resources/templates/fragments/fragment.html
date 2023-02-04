@@ -442,32 +442,6 @@
     }
 
 
-    function SirenFunction(idMyDiv) {
-        var objDiv = document.getElementById(idMyDiv);
-        if (objDiv.style.display == "block") {
-            objDiv.style.display = "none";
-        } else {
-            objDiv.style.display = "block";
-        }
-    }
-
-
-
-    function logout(){
-        $.ajax({
-            type : "GET",
-            url: '/logout',
-            success: function(data) {
-                alert(data);
-                location.reload();
-            },
-            error : function( xhr, status, error ) {
-                alert(status);
-            }
-        })
-    }
-
-
 
 
     // 버튼 클릭 시 첫번째 실행 -> 부모 댓글 작성

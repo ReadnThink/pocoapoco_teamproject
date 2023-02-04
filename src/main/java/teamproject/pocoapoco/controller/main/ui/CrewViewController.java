@@ -44,14 +44,14 @@ public class CrewViewController {
 
 
     // 크루 게시글 작성
-    @PostMapping("/view/v1/crews/")
+    @PostMapping
     @ApiOperation(value = "크루 게시글 등록", notes = "")
     public String addCrew(@RequestBody CrewRequest crewRequest, Authentication authentication) {
         crewService.addCrew(crewRequest, authentication.getName());
         return "crew/write";
     }
     // 크루 게시물 상세 페이지
-    @GetMapping("/view/v1/crews/{crewId}")
+    @GetMapping("/{crewId}")
     public String detailCrew(@PathVariable Long crewId, Model model, Authentication authentication) {
         try {
             CrewDetailResponse details = crewService.detailCrew(crewId);
@@ -67,7 +67,7 @@ public class CrewViewController {
     }
 
     // 크루 게시글 수정
-    @PutMapping("/view/v1/crews/{crewId}")
+    @PutMapping("/{crewId}")
     public String modifyCrew(@PathVariable Long crewId, @ModelAttribute CrewRequest crewRequest, Authentication authentication, Errors errors, RedirectAttributes attributes) {
         if (errors.hasErrors()) {
             return "crew/update-crew";
@@ -78,7 +78,7 @@ public class CrewViewController {
         return "redirect:" + "/view/v1/crews/update/" + crewResponse.getCrewId();
     }
     // 크루 게시글 수정화면
-    @GetMapping("/view/v1/crews/update/{crewId}")
+    @GetMapping("/update/{crewId}")
     public String updateCrew (@PathVariable Long crewId, Model model, Authentication authentication) {
         Crew crew  = crewRepository.findById(crewId).orElse(null);
         if(crew == null || !crew.getUser().getUsername().equals(authentication.getName())) {
@@ -95,7 +95,7 @@ public class CrewViewController {
     }
 
     // 크루 게시글 삭제
-    @DeleteMapping("/view/v1/crews/{crewId}")
+    @DeleteMapping("/{crewId}")
     public String deleteCrew(@PathVariable Long crewId,Model model ,Authentication authentication) {
         Crew crew = crewRepository.findById(crewId).orElse(null);
         User user = userRepository.findById(crew.getUser().getId()).orElse(null);
@@ -110,7 +110,7 @@ public class CrewViewController {
     }
 
     // 좋아요 누르기
-    @PostMapping("/view/v1/crews/{crewId}/like")
+    @PostMapping("/{crewId}/like")
     public ResponseEntity likeCrew(@PathVariable Long crewId, Authentication authentication){
         LikeViewResponse likeViewResponse =  likeViewService.pressLike(crewId,authentication.getName());
         return new ResponseEntity<>(likeViewResponse, HttpStatus.OK);
