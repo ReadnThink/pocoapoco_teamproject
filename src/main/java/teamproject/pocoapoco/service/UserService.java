@@ -1,6 +1,7 @@
 package teamproject.pocoapoco.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,11 +16,13 @@ import teamproject.pocoapoco.security.config.EncrypterConfig;
 import teamproject.pocoapoco.security.provider.JwtProvider;
 
 import javax.transaction.Transactional;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -196,17 +199,27 @@ public class UserService {
         User beforeMyUser = myUserOptional.get();
         // request에서 수정된 정보만 반영하기
 
-        String revisedUserName = (userProfileRequest.getUserName().equals(null))? beforeMyUser.getUserName(): userProfileRequest.getUserName();
-        String revisedAddress = (userProfileRequest.getAddress().equals(null))? beforeMyUser.getAddress(): userProfileRequest.getAddress();
-        String revisedPassword = (userProfileRequest.getPassword().equals(null))? beforeMyUser.getPassword(): userProfileRequest.getPassword();
+
+        log.info("들어온 userName 타입: {}", userProfileRequest.getUserName().getClass().getName());
+        log.info("들어온 address 타입: {}", userProfileRequest.getAddress().getClass().getName());
+        log.info("들어온 userName: {}", userProfileRequest.getUserName().isBlank());
+        log.info("들어온 address: {}", userProfileRequest.getAddress().isBlank());
+
+
+        String revisedUserName = (userProfileRequest.getUserName().isBlank())? beforeMyUser.getUserName(): userProfileRequest.getUserName();
+        String revisedAddress = (userProfileRequest.getAddress().isBlank())? beforeMyUser.getAddress(): userProfileRequest.getAddress();
+        String revisedPassword = (userProfileRequest.getPassword().isBlank())? beforeMyUser.getPassword(): userProfileRequest.getPassword();
         Boolean revisedLikeSoccer = (userProfileRequest.getLikeSoccer().equals(beforeMyUser.getSport().isSoccer()))? beforeMyUser.getSport().isSoccer(): userProfileRequest.getLikeSoccer();
         Boolean revisedLikeJogging = (userProfileRequest.getLikeJogging().equals(beforeMyUser.getSport().isJogging()))? beforeMyUser.getSport().isJogging(): userProfileRequest.getLikeJogging();
         Boolean revisedLikeTennis = (userProfileRequest.getLikeTennis().equals(beforeMyUser.getSport().isTennis()))? beforeMyUser.getSport().isTennis(): userProfileRequest.getLikeTennis();
 
         String encodedPassword = encrypterConfig.encoder().encode(revisedPassword);
 
+        log.info("userName: {}", revisedUserName);
+        log.info("address : {}", revisedAddress);
 
-        User revisedMyUser = User.toRevisedEntity(beforeMyUser.getId(), beforeMyUser.getUserId(), revisedUserName, revisedAddress, encodedPassword, revisedLikeSoccer, revisedLikeJogging, revisedLikeTennis);
+
+        User revisedMyUser = User.toRevisedEntity(beforeMyUser.getId(), beforeMyUser.getUserId(), revisedUserName, revisedAddress, encodedPassword, revisedLikeSoccer, revisedLikeJogging, revisedLikeTennis, beforeMyUser.getImagePath());
 
         userRepository.save(revisedMyUser);
 
