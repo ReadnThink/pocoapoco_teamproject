@@ -30,6 +30,8 @@ import teamproject.pocoapoco.service.ui.LikeViewService;
 
 import javax.persistence.EntityNotFoundException;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/view/v1/crews")
@@ -121,48 +123,88 @@ public class CrewViewController {
     // 크루 게시물 전체 조회
     @GetMapping()
     @ApiOperation(value = "크루 게시글 전체조회", notes = "")
-    public String findAllCrew(Model model,
-                                @PageableDefault(page = 0, size = 9, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<CrewDetailResponse> list = crewService.findAllCrews(pageable);
+    public String findAllCrew(Model model, @ModelAttribute("sportRequest") CrewSportRequest crewSportRequest,
+                              @PageableDefault(page = 0, size = 9, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
+        log.info("GetMapping findAllCrew");
+        log.info("crewSportRequest : {}", crewSportRequest.getStrict());
+
+        List<String> sportsList = crewSportRequest.getSportsList();
+
+        if (CollectionUtils.isEmpty(sportsList))
+            log.info("list empty");
+
+        Page<CrewDetailResponse> list;
+        if(crewSportRequest.getStrict() == null)
+            list = crewService.findAllCrews(pageable);
+        else if(crewSportRequest.getStrict() != null)
+            list = crewService.findAllCrewsWithStrict(crewSportRequest, pageable);
+        else
+            list = crewService.findAllCrewsBySport(crewSportRequest, pageable);
+
+
+        // 페이징 처리 변수
         int nowPage = list.getPageable().getPageNumber() + 1;
         int startPage = Math.max(nowPage - 4, 1);
         int endPage = Math.min(nowPage + 5, list.getTotalPages());
         int lastPage = list.getTotalPages();
 
+        // 게시글 리스트
         model.addAttribute("crewList", list);
 
+        // 페이징 처리 모델
         model.addAttribute("nowPage", nowPage);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
         model.addAttribute("lastPage", lastPage);
 
+
+        //test : 종목 검색
+        model.addAttribute("sportRequest",  crewSportRequest);
+
         return "main/main";
     }
 
 
-    // 크루 게시물 지역 검색 조회
-    @PostMapping("/strict")
-    @ApiOperation(value = "크루 게시글 지역 검색조회", notes = "")
-    public String findAllCrewWithStrict(String strict, Model model,
-                                          @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+    //test : 종목 검색
+    @PostMapping()
+    public String findAllCrewAndSport(Model model, @ModelAttribute("sportRequest") CrewSportRequest crewSportRequest,
+    @PageableDefault(page = 0, size = 9, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        CrewStrictRequest crewStrictRequest = new CrewStrictRequest(strict);
-        System.out.println("test\n" + crewStrictRequest.getStrict());
-        Page<CrewDetailResponse> list = crewService.findAllCrewsWithStrict(crewStrictRequest, pageable);
+        log.info("PostMapping findAllCrewAndSport");
+        log.info(String.valueOf(crewSportRequest.getSportsList().isEmpty()));
 
+        Page<CrewDetailResponse> list = crewService.findAllCrewsBySport(crewSportRequest, pageable);
+
+        // 페이징 처리 변수
         int nowPage = list.getPageable().getPageNumber() + 1;
         int startPage = Math.max(nowPage - 4, 1);
         int endPage = Math.min(nowPage + 5, list.getTotalPages());
         int lastPage = list.getTotalPages();
 
+        // 게시글 리스트
         model.addAttribute("crewList", list);
 
+        // 페이징 처리 모델
         model.addAttribute("nowPage", nowPage);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
         model.addAttribute("lastPage", lastPage);
 
+        model.addAttribute("sportRequest", crewSportRequest);
+
+
         return "main/main";
     }
+
+
+    @ModelAttribute("sportEnums")
+    private SportEnum[] sportEnums() {
+
+        SportEnum[] sportEnum = SportEnum.values();
+        System.out.println(sportEnum);
+
+        return sportEnum;
+    }
+
 }

@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.filter.HiddenHttpMethodFilter;
 
 @SpringBootApplication
-//@EnableJpaAuditing
+@EnableRedisHttpSession
 public class PocoapocoApplication {
     @Bean
     public HiddenHttpMethodFilter hiddenHttpMethodFilter(){
